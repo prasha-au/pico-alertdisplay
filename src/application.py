@@ -6,6 +6,7 @@ import socketpool
 import time
 import display
 import asyncio
+import json
 
 
 class Timer:
@@ -82,10 +83,17 @@ async def mqtt_event_loop():
     print("New message on topic {0}: {1}".format(topic, message))
     if topic == "picotest/msg":
       display.set_line_1(message)
-    elif topic == "picotest/setTimer":
+    elif topic == "picotest/addTimer":
       global timers
       timer_id, timer_seconds = message.split(",")
       timers[timer_id] = Timer(timer_id, int(timer_seconds))
+    elif topic == 'picotest/setTimers':
+      global timers
+      payload = json.loads(message)
+      incoming_timers = payload.data.timers
+      for timer in incoming_timers:
+        timer_id = timer.name or timer.id
+        timers[timer_id] = Timer(timer_id, timer.seconds)
 
 
 

@@ -2,7 +2,6 @@ import time
 import microcontroller
 import application
 
-
 try:
   application.run_application()
 except Exception as e:

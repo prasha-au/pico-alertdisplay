@@ -1,11 +1,10 @@
-import time
-from math import sin
 import board
 import displayio
 import rgbmatrix
 import framebufferio
 import terminalio
 from adafruit_display_text.label import Label
+import adafruit_imageload
 import asyncio
 
 
@@ -16,7 +15,7 @@ __m = Box()
 
 def init_display():
     displayio.release_displays()
-    display = framebufferio.FramebufferDisplay(
+    __m.display = framebufferio.FramebufferDisplay(
         rgbmatrix.RGBMatrix(
             width=64, bit_depth=2,
             rgb_pins=[board.GP0, board.GP1, board.GP2, board.GP3, board.GP4, board.GP5],
@@ -25,36 +24,59 @@ def init_display():
         auto_refresh=False)
 
     group = displayio.Group()
+    __m.display.root_group = group
 
-    line1 = Label(text="Hello", font=terminalio.FONT, color=0xff9600)
+
+    line1 = Label(text="", font=terminalio.FONT, color=0xff9600)
     line1.x = 2
     line1.y = 7
     group.append(line1)
+    __m.line1 = line1
 
 
-    line2 = Label(text="<3 <3 <3", font=terminalio.FONT, color=0xff9600)
+    line2 = Label(text="", font=terminalio.FONT, color=0xff9600)
     line2.x = 2
     line2.y = 21
     group.append(line2)
-
-    display.root_group = group
-
-    __m.display = display
-
-
-    __m.line1 = line1
     __m.line2 = line2
 
 
-def set_line_1(text, color=0x444444):
+    __m.icons = {}
+
+    b, p = adafruit_imageload.load('pc.bmp')
+    chicken_tile = displayio.TileGrid(b, pixel_shader=p)
+    chicken_tile.hidden = True
+    group.append(chicken_tile)
+    __m.icons['chicken'] = chicken_tile
+
+    b, p = adafruit_imageload.load('mail.bmp')
+    mail_tile = displayio.TileGrid(b, pixel_shader=p)
+    mail_tile.hidden = True
+    group.append(mail_tile)
+    __m.icons['mail'] = mail_tile
+
+
+
+def set_line_1(text, color=0x000000):
     __m.line1.text = text
     __m.line1.color = color
 
-def set_line_2(text, color=0x444444):
+def set_line_2(text, color=0x000000):
     __m.line2.text = text
     __m.line2.color = color
 
-async def get_display_task():
-    while True:
-        __m.display.refresh()
-        await asyncio.sleep(0.2)
+
+def set_icons(icons, position):
+    for k, v in __m.icons.items():
+        v.hidden = k not in icons
+        if k in icons:
+            v.x = 5 + 19 * icons.index(k)
+        if position == 'c':
+            v.y = 8
+        elif position == 'b':
+            v.y = 16
+        elif position == 't':
+            v.y = 2
+
+def refresh_display():
+    __m.display.refresh()

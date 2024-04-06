@@ -3,11 +3,11 @@ import adafruit_minimqtt.adafruit_minimqtt as MQTT
 import os
 import wifi
 import socketpool
-import time
 import display
 import asyncio
-import json
 
+
+DEVICE_ID = 'alertdisplay'
 
 class Timer:
   id = None
@@ -42,31 +42,77 @@ class Timer:
       return 0x444444
 
 
-
+is_hidden = False
 timers = {}
+show_icons = []
+
+
+async def update_display():
+  global timers
+  global show_icons
+  while True:
+    await asyncio.sleep(0.5)
+
+    if is_hidden:
+      display.set_line_1("", 0x000000)
+      display.set_line_2("", 0x000000)
+      display.set_icons([], 'c')
+      display.refresh_display()
+      continue
+
+    sorted_timers = sorted(timers.values(), key=lambda x: x.seconds)
+
+    if len(sorted_timers) >= 2:
+      display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
+      display.set_line_2(sorted_timers[1].to_display_str(), sorted_timers[1].to_display_color())
+      display.set_icons([], 'b')
+    elif len(sorted_timers) == 1:
+      display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
+      display.set_line_2("")
+      display.set_icons(show_icons, 'b')
+    else:
+      display.set_line_1("")
+      display.set_line_2("")
+      display.set_icons(show_icons, 'c')
+
+    display.refresh_display()
+
+
 
 async def update_timers():
   global timers
   while True:
-
     for timer in timers.values():
       timer.decrement()
       if not timer.is_valid():
         del timers[timer.id]
-
-    sorted_timers = sorted(timers.values(), key=lambda x: x.seconds)
-
-    if len(sorted_timers) > 0:
-      display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
-    else:
-      display.set_line_1("")
-    if len(sorted_timers) > 1:
-      display.set_line_2(sorted_timers[1].to_display_str(), sorted_timers[1].to_display_color())
-    else:
-      display.set_line_2("")
-
     await asyncio.sleep(1)
 
+
+
+def on_message(client, topic, message):
+  action = topic.replace(f'{DEVICE_ID}/', '')
+  print(f'New action {action} with message {message}')
+
+  if action == 'setPower':
+    global is_hidden
+    is_hidden = message == 'false'
+  elif action == 'addTimer':
+    global timers
+    timer_id, timer_seconds = message.split(",")
+    timers[timer_id] = Timer(timer_id, int(timer_seconds))
+  elif action == 'removeTimer':
+    global timers
+    if message in timers:
+      del timers[message]
+  elif action == 'setIcon':
+    global show_icons
+    icon, is_shown = message.split(',')
+    is_shown = is_shown == 'true'
+    if not is_shown:
+      show_icons = list(filter(lambda x: x != icon, show_icons))
+    elif not icon in show_icons:
+      show_icons.append(icon)
 
 
 async def mqtt_event_loop():
@@ -78,39 +124,15 @@ async def mqtt_event_loop():
       socket_pool=pool,
   )
 
-
-  def on_message(client, topic, message):
-    print("New message on topic {0}: {1}".format(topic, message))
-    if topic == "picotest/msg":
-      display.set_line_1(message)
-    elif topic == "picotest/addTimer":
-      global timers
-      timer_id, timer_seconds = message.split(",")
-      timers[timer_id] = Timer(timer_id, int(timer_seconds))
-    elif topic == 'picotest/setTimers':
-      global timers
-      payload = json.loads(message)
-      incoming_timers = payload.data.timers
-      for timer in incoming_timers:
-        timer_id = timer.name or timer.id
-        timers[timer_id] = Timer(timer_id, timer.seconds)
-
-
-
   mqtt_client.on_message = on_message
-
-
 
   print("Attempting to connect to %s" % mqtt_client.broker)
   mqtt_client.connect()
 
-  mqtt_topic = "picotest/msg"
-  print("Subscribing to %s" % mqtt_topic)
-  mqtt_client.subscribe(mqtt_topic)
-
-  mqtt_topic = "picotest/setTimer"
-  print("Subscribing to %s" % mqtt_topic)
-  mqtt_client.subscribe(mqtt_topic)
+  mqtt_actions = ['setPower', 'addTimer', 'removeTimer', 'setIcon']
+  for action in mqtt_actions:
+    print(f'Subscribing to {DEVICE_ID}/{action}')
+    mqtt_client.subscribe(f'{DEVICE_ID}/{action}')
 
   while True:
     mqtt_client.loop(1)
@@ -131,13 +153,11 @@ async def application():
 
   display.init_display()
 
-  display_task = asyncio.create_task(display.get_display_task())
-
-
+  display_task = asyncio.create_task(update_display())
 
   print("Gathering tasks")
   await asyncio.gather(
-    mqtt_task, display_task, timer_task
+    mqtt_task, timer_task, display_task
   )
 
 def run_application():

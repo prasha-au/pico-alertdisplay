@@ -27,3 +27,11 @@ plink -serial \\.\COM5 -sercfg 115200,8,1,N,N
 screen /dev/cu.xxxxxxx
 ```
 
+
+## Sample MQTT Invokes
+```
+mqtt publish -t alertdisplay/setTimer -m pan,60
+mqtt publish -t alertdisplay/removeTimer -m pan
+mqtt publish -t alertdisplay/setIcon -m chicken,true
+mqtt publish -t alertdisplay/setPower -m true
+```

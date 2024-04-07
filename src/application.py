@@ -5,38 +5,40 @@ import wifi
 import socketpool
 import display
 import asyncio
+import time
 
 
 DEVICE_ID = 'alertdisplay'
 
 class Timer:
   id = None
-  seconds = 0
+  expiry = None
 
   def __init__(self, id, seconds):
     self.id = id
-    self.seconds = seconds
+    self.expiry = time.monotonic() + seconds
 
-  def decrement(self):
-    self.seconds -= 1
+  def get_seconds_left(self):
+    return self.expiry - time.monotonic()
 
   def is_valid(self):
-    return self.seconds > -10
-
+    return self.get_seconds_left() > -10
 
   def to_display_str(self):
-    if self.seconds <= 0:
+    seconds_left = self.get_seconds_left()
+    if seconds_left <= 0:
       return "! %s" % self.id
     else:
-      seconds = self.seconds % 3600
+      seconds = seconds_left % 3600
       minutes = seconds // 60
       seconds %= 60
       return "%02d:%02d %s" % (minutes, seconds, self.id)
 
   def to_display_color(self):
-    if self.seconds <= 10:
+    seconds_left = self.get_seconds_left()
+    if seconds_left <= 10:
       return 0xff0000
-    elif self.seconds <= 30:
+    elif seconds_left <= 30:
       return 0xff9600
     else:
       return 0x444444
@@ -51,42 +53,29 @@ async def update_display():
   global timers
   global show_icons
   while True:
-    await asyncio.sleep(0.5)
 
     if is_hidden:
       display.set_line_1("", 0x000000)
       display.set_line_2("", 0x000000)
       display.set_icons([], 'c')
-      display.refresh_display()
-      continue
-
-    sorted_timers = sorted(timers.values(), key=lambda x: x.seconds)
-
-    if len(sorted_timers) >= 2:
-      display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
-      display.set_line_2(sorted_timers[1].to_display_str(), sorted_timers[1].to_display_color())
-      display.set_icons([], 'b')
-    elif len(sorted_timers) == 1:
-      display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
-      display.set_line_2("")
-      display.set_icons(show_icons, 'b')
     else:
-      display.set_line_1("")
-      display.set_line_2("")
-      display.set_icons(show_icons, 'c')
+      sorted_timers = sorted(timers.values(), key=lambda x: x.get_seconds_left())
+
+      if len(sorted_timers) >= 2:
+        display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
+        display.set_line_2(sorted_timers[1].to_display_str(), sorted_timers[1].to_display_color())
+        display.set_icons([], 'b')
+      elif len(sorted_timers) == 1:
+        display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
+        display.set_line_2("")
+        display.set_icons(show_icons, 'b')
+      else:
+        display.set_line_1("")
+        display.set_line_2("")
+        display.set_icons(show_icons, 'c')
 
     display.refresh_display()
-
-
-
-async def update_timers():
-  global timers
-  while True:
-    for timer in timers.values():
-      timer.decrement()
-      if not timer.is_valid():
-        del timers[timer.id]
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
 
 
 
@@ -143,11 +132,11 @@ async def mqtt_event_loop():
 
 async def application():
 
+  wifi.radio.hostname = 'pico-alertdisplay'
+
   wifi.radio.connect(os.getenv('CIRCUITPY_WIFI_SSID'), os.getenv('CIRCUITPY_WIFI_PASSWORD'))
 
   print("Starting wifi")
-
-  timer_task = asyncio.create_task(update_timers())
 
   mqtt_task = asyncio.create_task(mqtt_event_loop())
 
@@ -157,7 +146,7 @@ async def application():
 
   print("Gathering tasks")
   await asyncio.gather(
-    mqtt_task, timer_task, display_task
+    mqtt_task, display_task
   )
 
 def run_application():

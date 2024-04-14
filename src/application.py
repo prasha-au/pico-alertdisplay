@@ -123,6 +123,8 @@ async def mqtt_event_loop():
     print(f'Subscribing to {DEVICE_ID}/{action}')
     mqtt_client.subscribe(f'{DEVICE_ID}/{action}')
 
+  mqtt_client.publish(f'{DEVICE_ID}/hello', 'hello')
+
   while True:
     mqtt_client.loop(1)
     await asyncio.sleep(0)

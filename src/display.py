@@ -5,7 +5,6 @@ import framebufferio
 import terminalio
 from adafruit_display_text.label import Label
 import adafruit_imageload
-import asyncio
 
 
 class Box:
@@ -41,19 +40,14 @@ def init_display():
     __m.line2 = line2
 
 
+    icons = ['chicken', 'mail', 'bin_green', 'bin_yellow', 'washing']
     __m.icons = {}
-
-    b, p = adafruit_imageload.load('pc.bmp')
-    chicken_tile = displayio.TileGrid(b, pixel_shader=p)
-    chicken_tile.hidden = True
-    group.append(chicken_tile)
-    __m.icons['chicken'] = chicken_tile
-
-    b, p = adafruit_imageload.load('mail.bmp')
-    mail_tile = displayio.TileGrid(b, pixel_shader=p)
-    mail_tile.hidden = True
-    group.append(mail_tile)
-    __m.icons['mail'] = mail_tile
+    for icon in icons:
+        b, p = adafruit_imageload.load(f'{icon}.bmp')
+        tile = displayio.TileGrid(b, pixel_shader=p)
+        tile.hidden = True
+        group.append(tile)
+        __m.icons[icon] = tile
 
 
 

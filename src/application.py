@@ -75,7 +75,7 @@ async def update_display():
         display.set_icons(show_icons, 'c')
 
     display.refresh_display()
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.2)
 
 
 

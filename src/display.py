@@ -44,14 +44,16 @@ def init_display():
 
     weather = displayio.Group(x=45, y=5)
     weather.append(Label(text="", font=terminalio.FONT, color=0xda8f57))
-    weather.append(Rect(0, 6, 17, 1, fill=0xda8f57))
-    weather.append(Rect(0, 6, 5, 1, fill=0x9e5f30))
+    weather.append(Rect(0, 6, 17, 1, fill=0x000000))
+    weather.append(Rect(0, 6, 1, 1, fill=0x000000))
     weather.append(Rect(0, 0, 1, 1, fill=0x000000))
     __m.weather = weather
     __m.last_weather_icon = None
     group.append(weather)
 
 
+def set_power(is_on: bool):
+    __m.display.root_group.hidden = not is_on
 
 def set_timer_1(text, color=0x000000):
     __m.timer1.text = text
@@ -64,7 +66,6 @@ def set_timer_2(text, color=0x000000):
 
 def set_weather(temp, temp_pct, icon):
     __m.weather[0].text = f'{temp}C'
-
     pct_width = (17 * temp_pct) // 100
     __m.weather[1] = Rect(0, 6, 17, 1, fill=0xda8f57)
     __m.weather[2] = Rect(0, 6, max(1, pct_width), 1, fill=0x9e5f30)
@@ -86,12 +87,9 @@ def set_icon_visibility(icon, is_visible):
         tile = displayio.TileGrid(b, pixel_shader=p)
         __m.icons.append((icon, tile))
         __m.display.root_group.append(tile)
-
     else:
-        print('test')
         if icon not in icon_names:
             return
-        print('test1')
         item = next((v for v in __m.icons if v[0] == icon))
         __m.display.root_group.remove(item[1])
         __m.icons.remove(item)
@@ -107,7 +105,7 @@ def _assert_icon(idx: int, hidden: bool, coords: tuple[int, int] | None = None):
 
 
 # Layout with 2 icons and weather
-def set_layout_1():
+def _set_layout_1():
     __m.timer1.hidden = True
     __m.timer2.hidden = True
     __m.weather.hidden = False
@@ -118,7 +116,7 @@ def set_layout_1():
 
 
 # Layout with 4 icons and weather
-def set_layout_2():
+def _set_layout_2():
     __m.timer1.hidden = True
     __m.timer2.hidden = True
     __m.weather.hidden = False
@@ -129,7 +127,7 @@ def set_layout_2():
 
 
 # Layout with 1 timer and 3 icons
-def set_layout_3():
+def _set_layout_3():
     __m.timer1.hidden = False
     __m.timer2.hidden = True
     __m.weather.hidden = True
@@ -139,7 +137,7 @@ def set_layout_3():
     _assert_icon(3, True)
 
 # Layout with 2 timers
-def set_layout_4():
+def _set_layout_4():
     __m.timer1.hidden = False
     __m.timer2.hidden = False
     __m.weather.hidden = True
@@ -154,12 +152,12 @@ def set_layout_4():
 def refresh_display():
     if __m.timer1.text != "":
         if __m.timer2.text != "":
-            set_layout_4()
+            _set_layout_4()
         else:
-            set_layout_3()
+            _set_layout_3()
     else:
         if len(__m.icons) > 2:
-            set_layout_2()
+            _set_layout_2()
         else:
-            set_layout_1()
+            _set_layout_1()
     __m.display.refresh()

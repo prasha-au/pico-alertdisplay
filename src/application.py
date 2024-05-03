@@ -1,4 +1,3 @@
-import adafruit_connection_manager
 import adafruit_minimqtt.adafruit_minimqtt as MQTT
 import os
 import wifi
@@ -44,38 +43,25 @@ class Timer:
       return 0x444444
 
 
-is_hidden = False
 timers = {}
-show_icons = []
 
-
-async def update_display():
+async def update_timers():
   global timers
-  global show_icons
   while True:
+    sorted_timers = sorted(timers.values(), key=lambda x: x.get_seconds_left())
 
-    if is_hidden:
-      display.set_line_1("", 0x000000)
-      display.set_line_2("", 0x000000)
-      display.set_icons([], 'c')
+    if len(sorted_timers) >= 2:
+      display.set_timer_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
+      display.set_timer_2(sorted_timers[1].to_display_str(), sorted_timers[1].to_display_color())
+    elif len(sorted_timers) == 1:
+      display.set_timer_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
+      display.set_timer_2("")
     else:
-      sorted_timers = sorted(timers.values(), key=lambda x: x.get_seconds_left())
-
-      if len(sorted_timers) >= 2:
-        display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
-        display.set_line_2(sorted_timers[1].to_display_str(), sorted_timers[1].to_display_color())
-        display.set_icons([], 'b')
-      elif len(sorted_timers) == 1:
-        display.set_line_1(sorted_timers[0].to_display_str(), sorted_timers[0].to_display_color())
-        display.set_line_2("")
-        display.set_icons(show_icons, 'b')
-      else:
-        display.set_line_1("")
-        display.set_line_2("")
-        display.set_icons(show_icons, 'c')
+      display.set_timer_1("")
+      display.set_timer_2("")
 
     display.refresh_display()
-    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.1)
 
 
 
@@ -84,8 +70,7 @@ def on_message(client, topic, message):
   print(f'New action {action} with message {message}')
 
   if action == 'setPower':
-    global is_hidden
-    is_hidden = message == 'false'
+    display.set_power(message == 'true')
   elif action == 'addTimer':
     global timers
     timer_id, timer_seconds = message.split(",")
@@ -95,13 +80,12 @@ def on_message(client, topic, message):
     if message in timers:
       del timers[message]
   elif action == 'setIcon':
-    global show_icons
     icon, is_shown = message.split(',')
     is_shown = is_shown == 'true'
-    if not is_shown:
-      show_icons = list(filter(lambda x: x != icon, show_icons))
-    elif not icon in show_icons:
-      show_icons.append(icon)
+    display.set_icon_visibility(icon, is_shown)
+  elif action == 'setWeather':
+    temp, temp_pct, icon = message.split(',')
+    display.set_weather(int(temp), int(temp_pct), icon)
 
 
 async def mqtt_event_loop():
@@ -118,7 +102,7 @@ async def mqtt_event_loop():
   print("Attempting to connect to %s" % mqtt_client.broker)
   mqtt_client.connect()
 
-  mqtt_actions = ['setPower', 'addTimer', 'removeTimer', 'setIcon']
+  mqtt_actions = ['setPower', 'addTimer', 'removeTimer', 'setIcon', 'setWeather']
   for action in mqtt_actions:
     print(f'Subscribing to {DEVICE_ID}/{action}')
     mqtt_client.subscribe(f'{DEVICE_ID}/{action}')
@@ -144,7 +128,7 @@ async def application():
 
   display.init_display()
 
-  display_task = asyncio.create_task(update_display())
+  display_task = asyncio.create_task(update_timers())
 
   print("Gathering tasks")
   await asyncio.gather(

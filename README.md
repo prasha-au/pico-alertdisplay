@@ -35,3 +35,22 @@ mqtt publish -t alertdisplay/removeTimer -m pan
 mqtt publish -t alertdisplay/setIcon -m chicken,true
 mqtt publish -t alertdisplay/setPower -m true
 ```
+
+
+## Layouts
+```
+
+I I I W
+I I I W
+
+T T T T
+I I I I
+
+T T T T
+T T T T
+
+```
+
+
+
+

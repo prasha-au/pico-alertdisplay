@@ -42,8 +42,8 @@ def init_display():
     __m.icons = []
 
 
-    weather = displayio.Group(x=45, y=5)
-    weather.append(Label(text="", font=terminalio.FONT, color=0xda8f57))
+    weather = displayio.Group(x=45, y=6)
+    weather.append(Label(text="", font=terminalio.FONT, color=0x555555))
     weather.append(Rect(0, 6, 17, 1, fill=0x000000))
     weather.append(Rect(0, 6, 1, 1, fill=0x000000))
     weather.append(Rect(0, 0, 1, 1, fill=0x000000))
@@ -55,20 +55,20 @@ def init_display():
 def set_power(is_on: bool):
     __m.display.root_group.hidden = not is_on
 
-def set_timer_1(text, color=0x000000):
+def set_timer_1(text: str, color: int=0x000000):
     __m.timer1.text = text
     __m.timer1.color = color
 
-def set_timer_2(text, color=0x000000):
+def set_timer_2(text: str, color: int=0x000000):
     __m.timer2.text = text
     __m.timer2.color = color
 
 
-def set_weather(temp, temp_pct, icon):
-    __m.weather[0].text = f'{temp}C'
+def set_weather(temp: int, temp_pct: int, icon: str):
+    __m.weather[0].text = f'{temp}c'
     pct_width = (17 * temp_pct) // 100
-    __m.weather[1] = Rect(0, 6, 17, 1, fill=0xda8f57)
-    __m.weather[2] = Rect(0, 6, max(1, pct_width), 1, fill=0x9e5f30)
+    __m.weather[1] = Rect(0, 7, 17, 1, fill=0x555555)
+    __m.weather[2] = Rect(0, 7, max(1, pct_width), 1, fill=0x9e5f30)
     __m.weather[2].hidden = pct_width == 0
     if __m.last_weather_icon != icon:
         b, p = adafruit_imageload.load(f'{icon}.bmp')
@@ -77,7 +77,7 @@ def set_weather(temp, temp_pct, icon):
         __m.last_weather_icon = icon
 
 
-def set_icon_visibility(icon, is_visible):
+def set_icon_visibility(icon: str, is_visible: bool):
     icon_names = [ v[0] for v in __m.icons ]
 
     if is_visible:
@@ -109,8 +109,8 @@ def _set_layout_1():
     __m.timer1.hidden = True
     __m.timer2.hidden = True
     __m.weather.hidden = False
-    _assert_icon(0, False, (2, 8))
-    _assert_icon(1, False, (22, 8))
+    _assert_icon(0, False, (4, 8))
+    _assert_icon(1, False, (24, 8))
     _assert_icon(2, True)
     _assert_icon(3, True)
 
@@ -120,10 +120,10 @@ def _set_layout_2():
     __m.timer1.hidden = True
     __m.timer2.hidden = True
     __m.weather.hidden = False
-    _assert_icon(0, False, (2, 1))
-    _assert_icon(1, False, (22, 1))
-    _assert_icon(2, False, (2, 16))
-    _assert_icon(3, False, (22, 16))
+    _assert_icon(0, False, (4, 1))
+    _assert_icon(1, False, (24, 1))
+    _assert_icon(2, False, (4, 16))
+    _assert_icon(3, False, (24, 16))
 
 
 # Layout with 1 timer and 3 icons
@@ -131,9 +131,9 @@ def _set_layout_3():
     __m.timer1.hidden = False
     __m.timer2.hidden = True
     __m.weather.hidden = True
-    _assert_icon(0, False, (2, 16))
-    _assert_icon(1, False, (22, 16))
-    _assert_icon(2, False, (42, 16))
+    _assert_icon(0, False, (4, 16))
+    _assert_icon(1, False, (24, 16))
+    _assert_icon(2, False, (46, 16))
     _assert_icon(3, True)
 
 # Layout with 2 timers

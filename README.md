@@ -40,17 +40,26 @@ mqtt publish -t alertdisplay/setPower -m true
 ## Layouts
 ```
 
-I I I W
-I I I W
+I I W         // (x: (2, 22, 45), y: 1)
+I I W         // (x: (2, 22, 45), y: 16)
 
-T T T T
-I I I I
+T T T
+I I I
 
-T T T T
-T T T T
+T T T
+T T T
 
 ```
 
 
+## Creating Image
+
+You can use [Piskel](https://www.piskelapp.com/) and import the BMP files to edit them.
+
+Piskel can export to PNG and you can use the command below (on OSX) to convert it to BMP.
+
+```bash
+sips -s format jpeg test.png --out test.jpg
+```
 
 

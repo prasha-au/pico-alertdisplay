@@ -16,6 +16,15 @@ class Box:
 
 __m = Box()
 
+def _tile_from_icon(icon: str, **kwargs):
+    try:
+        b, p = adafruit_imageload.load(f'{icon}.bmp')
+        return displayio.TileGrid(b, pixel_shader=p, **kwargs)
+    except:
+        b, p = adafruit_imageload.load(f'question.bmp')
+        return displayio.TileGrid(b, pixel_shader=p, **kwargs)
+
+
 def init_display():
     displayio.release_displays()
     __m.display = framebufferio.FramebufferDisplay(
@@ -71,8 +80,7 @@ def set_weather(temp: int, temp_pct: int, icon: str):
     __m.weather[2] = Rect(0, 7, max(1, pct_width), 1, fill=0x9e5f30)
     __m.weather[2].hidden = pct_width == 0
     if __m.last_weather_icon != icon:
-        b, p = adafruit_imageload.load(f'{icon}.bmp')
-        tile = displayio.TileGrid(b, pixel_shader=p, y=10)
+        tile = _tile_from_icon(icon, y=10)
         __m.weather[3] = tile
         __m.last_weather_icon = icon
 
@@ -83,8 +91,7 @@ def set_icon_visibility(icon: str, is_visible: bool):
     if is_visible:
         if icon in icon_names:
             return
-        b, p = adafruit_imageload.load(f'{icon}.bmp')
-        tile = displayio.TileGrid(b, pixel_shader=p)
+        tile = _tile_from_icon(icon)
         __m.icons.append((icon, tile))
         __m.display.root_group.append(tile)
     else:
@@ -96,7 +103,7 @@ def set_icon_visibility(icon: str, is_visible: bool):
 
 
 
-def _assert_icon(idx: int, hidden: bool, coords: tuple[int, int] | None = None):
+def _setup_icon(idx: int, hidden: bool, coords: tuple[int, int] | None = None):
     if idx < len(__m.icons):
         __m.icons[idx][1].hidden = hidden
         if coords is not None:
@@ -109,10 +116,10 @@ def _set_layout_1():
     __m.timer1.hidden = True
     __m.timer2.hidden = True
     __m.weather.hidden = False
-    _assert_icon(0, False, (4, 8))
-    _assert_icon(1, False, (24, 8))
-    _assert_icon(2, True)
-    _assert_icon(3, True)
+    _setup_icon(0, False, (4, 8))
+    _setup_icon(1, False, (24, 8))
+    _setup_icon(2, True)
+    _setup_icon(3, True)
 
 
 # Layout with 4 icons and weather
@@ -120,10 +127,10 @@ def _set_layout_2():
     __m.timer1.hidden = True
     __m.timer2.hidden = True
     __m.weather.hidden = False
-    _assert_icon(0, False, (4, 1))
-    _assert_icon(1, False, (24, 1))
-    _assert_icon(2, False, (4, 16))
-    _assert_icon(3, False, (24, 16))
+    _setup_icon(0, False, (4, 1))
+    _setup_icon(1, False, (24, 1))
+    _setup_icon(2, False, (4, 16))
+    _setup_icon(3, False, (24, 16))
 
 
 # Layout with 1 timer and 3 icons
@@ -131,20 +138,20 @@ def _set_layout_3():
     __m.timer1.hidden = False
     __m.timer2.hidden = True
     __m.weather.hidden = True
-    _assert_icon(0, False, (4, 16))
-    _assert_icon(1, False, (24, 16))
-    _assert_icon(2, False, (46, 16))
-    _assert_icon(3, True)
+    _setup_icon(0, False, (4, 16))
+    _setup_icon(1, False, (24, 16))
+    _setup_icon(2, False, (46, 16))
+    _setup_icon(3, True)
 
 # Layout with 2 timers
 def _set_layout_4():
     __m.timer1.hidden = False
     __m.timer2.hidden = False
     __m.weather.hidden = True
-    _assert_icon(0, True)
-    _assert_icon(1, True)
-    _assert_icon(2, True)
-    _assert_icon(3, True)
+    _setup_icon(0, True)
+    _setup_icon(1, True)
+    _setup_icon(2, True)
+    _setup_icon(3, True)
 
 
 

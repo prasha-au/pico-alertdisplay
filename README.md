@@ -1,6 +1,11 @@
-# ESP with MicroPython
+# Pico AlertDisplay
 
-This repository is about working on the ESP8266 with MicroPython (in particular the NodeMCU dev board).
+A CircuitPython project to integrate a simple P5 LED Panel with my [HomeNode](https://prasha.au/project/homenode) automation system.
+
+A Pi Pico W listens for MQTT messages and shows:
+- timers from Google Home
+- the weather
+- other various alerts from the system as icons
 
 
 
@@ -13,13 +18,17 @@ This repository is about working on the ESP8266 with MicroPython (in particular 
 4. Install the requirements using `pip install -r host-requirements.txt`
 
 
-## CircuitPython deps
+### CircuitPython Device Deps 
 ```shell
 circup install -r device-requirements.txt
 ```
 
 
-# REPL
+## Developing
+
+Using REPL is the best way to quickly test things. The [displaytest.py](./src/displaytest.py) file has rough code for quickly displaying things.
+
+### REPL
 ```shell
 // Windows
 plink -serial \\.\COM5 -sercfg 115200,8,1,N,N
@@ -28,7 +37,8 @@ screen /dev/cu.xxxxxxx
 ```
 
 
-## Sample MQTT Invokes
+
+### Sample MQTT Invokes
 ```
 mqtt publish -t alertdisplay/setTimer -m pan,60
 mqtt publish -t alertdisplay/removeTimer -m pan
@@ -37,9 +47,8 @@ mqtt publish -t alertdisplay/setPower -m true
 ```
 
 
-## Layouts
+### Screen Item Layouts
 ```
-
 I I W         // (x: (2, 22, 45), y: 1)
 I I W         // (x: (2, 22, 45), y: 16)
 
@@ -48,11 +57,10 @@ I I I
 
 T T T
 T T T
-
 ```
 
 
-## Creating Image
+### Creating Icons
 
 You can use [Piskel](https://www.piskelapp.com/) and import the BMP files to edit them.
 
@@ -61,5 +69,6 @@ Piskel can export to PNG and you can use the command below (on OSX) to convert i
 ```bash
 sips -s format jpeg test.png --out test.jpg
 ```
+
 
 

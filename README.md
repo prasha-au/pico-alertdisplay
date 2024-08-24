@@ -1,12 +1,16 @@
 # Pico AlertDisplay
 
-A CircuitPython project to integrate a simple P5 LED Panel with my [HomeNode](https://prasha.au/project/homenode) automation system.
+A CircuitPython project to integrate a simple P5 LED Panel with my [Homenode](https://prasha.au/project/homenode) automation system.
 
 A Pi Pico W listens for MQTT messages and shows:
 - timers from Google Home
 - the weather
 - other various alerts from the system as icons
 
+
+## Preview
+
+https://github.com/user-attachments/assets/800a4657-f4b4-47d5-b7f3-ee6615eddd4a
 
 
 ## Initial setup

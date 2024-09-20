@@ -61,7 +61,7 @@ async def update_timers():
       display.set_timer_2("")
 
     display.refresh_display()
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.2)
 
 
 
@@ -95,6 +95,8 @@ async def mqtt_event_loop():
   mqtt_client = MQTT.MQTT(
     broker=os.getenv('MQTT_URL'),
     socket_pool=pool,
+    socket_timeout=0.2,
+    connect_retries=1,
   )
 
   mqtt_client.on_message = on_message
@@ -106,6 +108,7 @@ async def mqtt_event_loop():
       mqtt_client.connect()
       break
     except MQTT.MMQTTException as e:
+      print('failed connect')
       time.sleep(5)
 
   mqtt_actions = ['setPower', 'addTimer', 'removeTimer', 'setIcon', 'setWeather']
@@ -116,9 +119,8 @@ async def mqtt_event_loop():
   mqtt_client.publish(f'{DEVICE_ID}/hello', '{}')
 
   while True:
-    mqtt_client.loop(1)
-    await asyncio.sleep(0.2)
-
+    mqtt_client.loop(0.2)
+    await asyncio.sleep(1)
 
 
 

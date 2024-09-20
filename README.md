@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/800a4657-f4b4-47d5-b7f3-ee6615eddd4a
 4. Install the requirements using `pip install -r host-requirements.txt`
 
 
-### CircuitPython Device Deps 
+### CircuitPython Device Deps
 ```shell
 circup install -r device-requirements.txt
 ```
@@ -43,7 +43,7 @@ screen /dev/cu.xxxxxxx
 
 
 ### Sample MQTT Invokes
-```
+```pip i
 mqtt publish -t alertdisplay/setTimer -m pan,60
 mqtt publish -t alertdisplay/removeTimer -m pan
 mqtt publish -t alertdisplay/setIcon -m chicken,true

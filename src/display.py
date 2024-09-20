@@ -60,6 +60,8 @@ def init_display():
     __m.last_weather_icon = None
     group.append(weather)
 
+    __m.display.refresh()
+
 
 def set_power(is_on: bool):
     __m.display.root_group.hidden = not is_on

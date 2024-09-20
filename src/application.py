@@ -93,14 +93,20 @@ async def mqtt_event_loop():
   pool = socketpool.SocketPool(wifi.radio)
 
   mqtt_client = MQTT.MQTT(
-      broker=os.getenv('MQTT_URL'),
-      socket_pool=pool,
+    broker=os.getenv('MQTT_URL'),
+    socket_pool=pool,
   )
 
   mqtt_client.on_message = on_message
 
   print("Attempting to connect to %s" % mqtt_client.broker)
-  mqtt_client.connect()
+
+  while True:
+    try:
+      mqtt_client.connect()
+      break
+    except MQTT.MMQTTException as e:
+      time.sleep(5)
 
   mqtt_actions = ['setPower', 'addTimer', 'removeTimer', 'setIcon', 'setWeather']
   for action in mqtt_actions:
@@ -111,12 +117,13 @@ async def mqtt_event_loop():
 
   while True:
     mqtt_client.loop(1)
-    await asyncio.sleep(0)
+    await asyncio.sleep(0.2)
 
 
 
 
 async def application():
+  display.init_display()
 
   wifi.radio.hostname = 'pico-alertdisplay'
 
@@ -125,8 +132,6 @@ async def application():
   print("Starting wifi")
 
   mqtt_task = asyncio.create_task(mqtt_event_loop())
-
-  display.init_display()
 
   display_task = asyncio.create_task(update_timers())
 
